@@ -57,7 +57,7 @@ class GmailAttachmentDownloader:
         with open(self.processed_files_path, 'w') as file:
             json.dump(processed_files, file)
 
-    def save_attachment(self, part, msg_id):
+    def save_attachment(self, part, msg_id, subject):
         if 'filename' in part and part['filename']:
             filename = part['filename']
             file_data = part['body'].get('data')
@@ -67,26 +67,27 @@ class GmailAttachmentDownloader:
                 ).execute()
                 file_data = attachment['data']
 
-            # Добавляем уникальный идентификатор к имени файла
-            unique_filename = f"{msg_id}_{filename}"
-            file_path = os.path.join(self.download_dir, unique_filename)
+            # Преобразуем тему письма в допустимое имя файла
+            safe_subject = "".join([c if c.isalnum() or c in " ._-" else "_" for c in subject])
+
+            # Создаем новое имя файла на основе темы письма
+            new_filename = f"{safe_subject}_{filename}"
+            file_path = os.path.join(self.download_dir, new_filename)
 
             if not os.path.exists(file_path):
                 with open(file_path, 'wb') as f:
                     f.write(base64.urlsafe_b64decode(file_data))
-                print(f"Файл {unique_filename} сохранен в {file_path}")
+                print(f"Файл {new_filename} сохранен в {file_path}")
                 self.save_processed_file(msg_id)
             else:
-                print(f"Файл {unique_filename} уже был скачан, пропускаем.")
+                print(f"Файл {new_filename} уже был скачан, пропускаем.")
 
-    def process_parts(self, parts, msg_id):
+    def process_parts(self, parts, msg_id, subject):
         for part in parts:
-            if part['mimeType'] == 'multipart/alternative':
-                self.process_parts(part['parts'], msg_id)
-            elif part['mimeType'] == 'multipart/mixed':
-                self.process_parts(part['parts'], msg_id)
+            if part['mimeType'] == 'multipart/alternative' or part['mimeType'] == 'multipart/mixed':
+                self.process_parts(part['parts'], msg_id, subject)
             else:
-                self.save_attachment(part, msg_id)
+                self.save_attachment(part, msg_id, subject)
 
     def download_attachments(self):
         processed_files = self.load_processed_files()
@@ -102,13 +103,19 @@ class GmailAttachmentDownloader:
         for message in messages:
             msg_id = message['id']
 
-            # Проверяем, был ли этот файл уже обработан
+            # Проверяем, было ли это письмо уже обработано
             if msg_id in processed_files:
                 print(f"Письмо с ID {msg_id} уже обработано, пропускаем.")
                 continue
 
             msg = self.service.users().messages().get(userId='me', id=msg_id).execute()
 
-            if 'parts' in msg['payload']:
-                self.process_parts(msg['payload']['parts'], msg_id)
+            subject = ""
+            headers = msg['payload'].get('headers', [])
+            for header in headers:
+                if header['name'].lower() == 'subject':
+                    subject = header['value']
+                    break
 
+            if 'parts' in msg['payload']:
+                self.process_parts(msg['payload']['parts'], msg_id, subject)
