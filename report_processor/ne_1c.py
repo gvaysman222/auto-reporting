@@ -3,6 +3,7 @@ import gspread
 from gspread_dataframe import set_with_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
 
+
 class RevenueProcessor:
     def __init__(self, file_path, credentials_path, spreadsheet_id, worksheet_name):
         self.file_path = file_path
@@ -84,6 +85,7 @@ class RevenueProcessor:
         self.upload_to_google_sheets()
         print(self.result_df)  # Опционально для вывода результата
 
+
 class SalesReportProcessor:
     def __init__(self, file_path, credentials_path, spreadsheet_id, worksheet_name):
         self.file_path = file_path
@@ -150,7 +152,7 @@ class SalesReportProcessor:
         # Проверка соответствия длин массивов и создание DataFrame
         if len(self.sellers) == len(self.gross_sales) == len(self.quantity) == len(self.returns_cost) == len(
                 self.returns_quantity) == len(self.discount) == len(self.revenue) == len(self.item_quantity) == len(
-                self.checks) == len(self.average_check) == len(self.upt):
+            self.checks) == len(self.average_check) == len(self.upt):
             self.new_df = pd.DataFrame({
                 'Продавец': self.sellers.values,
                 'Дата': [self.date] * len(self.sellers),
@@ -189,4 +191,3 @@ class SalesReportProcessor:
         self.process_data()
         self.create_dataframe()
         self.upload_to_google_sheets()
-

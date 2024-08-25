@@ -18,18 +18,15 @@ class GmailAttachmentDownloader:
         self.service = None
         self.creds = None
 
-        # Создание папки для загрузки файлов, если она не существует
         if not os.path.exists(self.download_dir):
             os.makedirs(self.download_dir)
 
         self.authenticate_gmail()
 
     def authenticate_gmail(self):
-        # Загрузка токена, если он уже существует
         if os.path.exists(self.token_path):
             self.creds = Credentials.from_authorized_user_file(self.token_path, self.scopes)
 
-        # Если токен недействителен, или не существует, запускаем процесс авторизации
         if not self.creds or not self.creds.valid:
             if self.creds and self.creds.expired and self.creds.refresh_token:
                 self.creds.refresh(Request())
@@ -37,11 +34,9 @@ class GmailAttachmentDownloader:
                 flow = InstalledAppFlow.from_client_secrets_file(self.credentials_path, self.scopes)
                 self.creds = flow.run_local_server(port=0)
 
-            # Сохраняем новый токен в файл
             with open(self.token_path, 'w') as token_file:
                 token_file.write(self.creds.to_json())
 
-        # Инициализация сервиса Gmail API
         self.service = build('gmail', 'v1', credentials=self.creds)
 
     def load_processed_files(self):
