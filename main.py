@@ -68,7 +68,7 @@ def handle_processing_error(file_path, exception, alert_bot):
 
 def main():
     # Создание экземпляра Telegram бота для отправки алертов
-    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['chat_id'], CONFIG['sheets_credentials_path'], 0)
+    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['chat_id'], CONFIG['sheets_credentials_path'], "1T_xOCiDFiE8BWDsK_Iodo79fu2aLV_DqgZQrtbpwhU4")
 
     # Создание экземпляра класса для загрузки файлов
     downloader = GmailAttachmentDownloader(
@@ -98,8 +98,10 @@ def main():
                 os.remove(file_path)
                 logging.info(f"Файл {file_name} успешно обработан и удален.")
             else:
+                os.remove(file_path)
                 logging.warning(f"Файл {file_name} не удалось обработать, он пропущен.")
 
+    TelegramAlertBot.generate_and_send_report(alert_bot)
 
 if __name__ == '__main__':
     main()

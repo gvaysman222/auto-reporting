@@ -2,7 +2,6 @@ import datetime
 import telebot
 from commons.google_sheets_worker import GoogleSheetsClient
 
-
 class TelegramAlertBot:
     def __init__(self, bot_token, chat_id, json_keyfile_name, spreadsheet_id):
         self.bot = telebot.TeleBot(bot_token)
@@ -16,46 +15,67 @@ class TelegramAlertBot:
             print(f"Не удалось отправить сообщение: {e}")
 
     def get_data_from_google_sheets(self, sheet_name, date):
-        worksheet = self.google_sheets_client.get_worksheet_by_name(sheet_name)
+        try:
+            worksheet = self.google_sheets_client.get_worksheet_by_name(sheet_name)
+            data = worksheet.get_all_values()
+        except Exception as e:
+            self.send_message(f"Ошибка при получении данных из Google Sheets: {e}")
+            return []
 
-        # Получаем все данные из листа
-        data = worksheet.get_all_records()
-
-        # Фильтруем данные по дате
+        # Список для хранения всех строк, соответствующих заданной дате
+        matching_rows = []
         for row in data:
-            if row['Дата'] == date:
-                return row
+            if row[1] == date:  # Предполагаем, что столбец "Дата" - это второй столбец, индекс 1
+                matching_rows.append(row)
 
-        return None
+        return matching_rows
 
     def generate_and_send_report(self):
+        days_of_week = {
+            "Monday": "Понедельник",
+            "Tuesday": "Вторник",
+            "Wednesday": "Среда",
+            "Thursday": "Четверг",
+            "Friday": "Пятница",
+            "Saturday": "Суббота",
+            "Sunday": "Воскресенье"
+        }
         # Получение текущей даты и расчет вчерашней даты
         today = datetime.date.today()
         yesterday = today - datetime.timedelta(days=1)
         date_str = yesterday.strftime("%d.%m.%Y")
 
+        day_of_week = days_of_week[yesterday.strftime("%A")]
+
         # Извлечение данных из Google Sheets
         sheet_name = "ИСТОРИЯ МАГАЗИНОВ"  # Укажите нужный лист
-        data = self.get_data_from_google_sheets(sheet_name, date_str)
+        rows = self.get_data_from_google_sheets(sheet_name, date_str)
 
-        if not data:
+        if not rows:
             self.send_message(f"Нет данных для отчета на {date_str}")
             return
 
-        for row in data:
+        # Обработка всех строк, соответствующих заданной дате
+        for data in rows:
+            # Проверка, что данные содержат нужное количество столбцов
+            if len(data) < 21:  # Убедитесь, что есть как минимум 21 элемент
+                self.send_message(f"Ошибка: Недостаточно данных для отчета на {date_str}")
+                continue
+
+            # Формирование сообщения, используя индексы столбцов
             message = (
-                f"Дата: {yesterday.strftime('%A (%V) %d.%m.%Y (B)')}\n\n"
-                f"{row['ID']} (A) {row['Магазин/город']} (R)\n\n"
-                f"История: {row['Выручка история']} (J)\n"
-                f"План: {row['Выручка план день']} (Q)\n"
-                f"Факт: {row['Выручка']} (C)\n\n"
-                f"Ср. чек: {row['Сумма среднего чека']} (F) / {row['Средний история+1+2']} (M)\n"
-                f"Входы: {row['Входы']} (H) / {row['Входы история+1+2']} (O)\n"
-                f"Upt: {row['UPT']} (G) / {row['UPT история+1+2']} (N)\n"
-                f"Cnr: {row['Конверсия']} (I) / {row['Конверсия история+1+2']} (P)\n\n"
-                f"Выручка: {row['Прирост выручка']} (S)\n"
-                f"Входы: {row['Прирост Входы']} (T)\n"
-                f"Эффективность: {row['Эффективность']} (U)"
+                f"Дата: {day_of_week} {yesterday.strftime('%d.%m.%Y')}\n\n"
+                f"{data[0]} {data[17]}\n\n"  # ID и Магазин&Город (например, это столбцы A и R)
+                f"История: {data[9]} \n"  # Выручка история
+                f"План: {data[16]} \n"  # Выручка план день
+                f"Факт: {data[2]} \n\n"  # Выручка
+                f"Ср. чек: {data[5]}  / {data[12]} \n"  # Сумма среднего чека и Средний история+1+2
+                f"Входы: {data[7]}  / {data[14]} \n"  # Входы и Входы история+1+2
+                f"Upt: {data[6]}  / {data[13]} \n"  # UPT и UPT история+1+2
+                f"Cnr: {data[8]} / {data[15]} \n\n"  # Конверсия и Конверсия история+1+2
+                f"Выручка: {data[18]} \n"  # Прирост выручка
+                f"Входы: {data[19]} \n"  # Прирост Входы
+                f"Эффективность: {data[20]} "  # Эффективность
             )
 
             # Отправка сообщения через Telegram бот
