@@ -71,10 +71,17 @@ class RevenueProcessor:
         self.worksheet = spreadsheet.worksheet(self.worksheet_name)
 
     def upload_to_google_sheets(self):
-        # Определение последней заполненной строки
-        last_row = len(self.worksheet.get_all_values()) + 1
-        # Загрузка DataFrame в Google Таблицу без заголовков, начиная с последней заполненной строки
-        set_with_dataframe(self.worksheet, self.result_df, row=last_row, include_column_header=False)
+        col_a_values = self.worksheet.col_values(1)
+
+        # Определение первой пустой строки в столбце A
+        first_empty_row = len(col_a_values) + 1
+        for idx, value in enumerate(col_a_values, start=1):
+            if not value.strip():  # Проверяем, что значение пустое или состоит из пробелов
+                first_empty_row = idx
+                break
+
+        # Загрузка DataFrame в Google Таблицу без заголовков, начиная с первой пустой строки в столбце A
+        set_with_dataframe(self.worksheet, self.result_df, row=first_empty_row, include_column_header=False)
 
     def process(self):
         self.load_initial_data()
@@ -148,27 +155,31 @@ class SalesReportProcessor:
         # Извлечение данных о UPT для соответствующих продавцов (столбец 'во')
         self.upt = self.df_full.loc[self.sellers.index, 'во']
 
+        full_store_id = self.df_full['стоимость'].dropna().iloc[-1]
+        self.store_id = full_store_id[:4]
     def create_dataframe(self):
-        # Проверка соответствия длин массивов и создание DataFrame
-        if len(self.sellers) == len(self.gross_sales) == len(self.quantity) == len(self.returns_cost) == len(
-                self.returns_quantity) == len(self.discount) == len(self.revenue) == len(self.item_quantity) == len(
-            self.checks) == len(self.average_check) == len(self.upt):
-            self.new_df = pd.DataFrame({
-                'Продавец': self.sellers.values,
-                'Дата': [self.date] * len(self.sellers),
-                'Валовая стоимость': self.gross_sales.values,
-                'Количество товара': self.quantity.values,
-                'Стоимость возвратов': self.returns_cost.values,
-                'Количество возвратов': self.returns_quantity.values,
-                'Скидка': self.discount.values,
-                'Выручка': self.revenue.values,
-                'Кол-во товаров': self.item_quantity.values,
-                'Количество чеков': self.checks.values,
-                'Средний чек': self.average_check.values,
-                'UPT': self.upt.values
-            })
-        else:
-            raise ValueError("Lengths of data arrays do not match.")
+            # Проверка соответствия длин массивов и создание DataFrame
+            if len(self.sellers) == len(self.gross_sales) == len(self.quantity) == len(self.returns_cost) == len(
+                    self.returns_quantity) == len(self.discount) == len(self.revenue) == len(self.item_quantity) == len(
+                self.checks) == len(self.average_check) == len(self.upt):
+                # Создание DataFrame с добавлением столбца ID магазина (столбец M)
+                self.new_df = pd.DataFrame({
+                    'Продавец': self.sellers.values,
+                    'Дата': [self.date] * len(self.sellers),
+                    'Валовая стоимость': self.gross_sales.values,
+                    'Количество товара': self.quantity.values,
+                    'Стоимость возвратов': self.returns_cost.values,
+                    'Количество возвратов': self.returns_quantity.values,
+                    'Скидка': self.discount.values,
+                    'Выручка': self.revenue.values,
+                    'Кол-во товаров': self.item_quantity.values,
+                    'Количество чеков': self.checks.values,
+                    'Средний чек': self.average_check.values,
+                    'UPT': self.upt.values,
+                    'ID Магазина': [self.store_id] * len(self.sellers)  # Добавляем ID магазина в столбец M
+                })
+            else:
+                raise ValueError("Lengths of data arrays do not match.")
 
     def upload_to_google_sheets(self):
         # Аутентификация с помощью сервисного аккаунта
@@ -180,11 +191,18 @@ class SalesReportProcessor:
         spreadsheet = client.open_by_key(self.spreadsheet_id)
         worksheet = spreadsheet.worksheet(self.worksheet_name)
 
-        # Определение последней заполненной строки
-        last_row = len(worksheet.get_all_values()) + 1
+        # Получение всех значений столбца A
+        col_a_values = worksheet.col_values(1)
 
-        # Загрузка DataFrame в Google Таблицу без заголовков, начиная с последней заполненной строки
-        set_with_dataframe(worksheet, self.new_df, row=last_row, include_column_header=False)
+        # Определение первой пустой строки в столбце A
+        first_empty_row = len(col_a_values) + 1
+        for idx, value in enumerate(col_a_values, start=1):
+            if not value.strip():  # Проверяем, что значение пустое или состоит из пробелов
+                first_empty_row = idx
+                break
+
+        # Загрузка DataFrame в Google Таблицу без заголовков, начиная с первой пустой строки в столбце A
+        set_with_dataframe(worksheet, self.new_df, row=first_empty_row, include_column_header=False)
 
     def process(self):
         self.load_data()

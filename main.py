@@ -18,11 +18,12 @@ CONFIG = {
     'download_dir': 'downloads',
     'processed_files_path': 'loader_reporting/processed_files.json',
     'sheets_credentials_path': 'loader_reporting/credentials/mailapi-431104-8992c2888d0e.json',
-    'spreadsheet_id_1': '1T_xOCiDFiE8BWDsK_Iodo79fu2aLV_DqgZQrtbpwhU4',
+    'spreadsheet_id_1': '1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0',
     'worksheet_name_1': 'ИСТОРИЯ МАГАЗИНОВ',
     'worksheet_name_2': 'ИСТОРИЯ ПО ПК',
-    'bot_token': "5998611067:AAGAorkOfr0PRAn-vZWyUiKxWQ11MhsUUj8",
-    'chat_id': "-1002030942634"
+    'bot_token': "6557974713:AAEE0YRnoHprSnV0HXvAgpJz2ndP_d1Pipg",
+    'chat_id_alert': "-1001819696460",
+    'chat_id_otchet': "-1001625050526"
 }
 
 
@@ -62,13 +63,13 @@ def handle_processing_error(file_path, exception, alert_bot):
     file_name = os.path.basename(file_path)
     alert_message = f"Ошибка при обработке файла '{file_name}': {exception}"
     time.sleep(1)
-    alert_bot.send_message(alert_message)
+    alert_bot.send_message_alert(alert_message)
     logging.error(alert_message)
 
 
 def main():
     # Создание экземпляра Telegram бота для отправки алертов
-    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['chat_id'], CONFIG['sheets_credentials_path'], "1T_xOCiDFiE8BWDsK_Iodo79fu2aLV_DqgZQrtbpwhU4")
+    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['chat_id_alert'], CONFIG['sheets_credentials_path'], "1T_xOCiDFiE8BWDsK_Iodo79fu2aLV_DqgZQrtbpwhU4", CONFIG['chat_id_otchet'])
 
     # Создание экземпляра класса для загрузки файлов
     downloader = GmailAttachmentDownloader(

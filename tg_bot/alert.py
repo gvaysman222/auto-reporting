@@ -3,14 +3,21 @@ import telebot
 from commons.google_sheets_worker import GoogleSheetsClient
 
 class TelegramAlertBot:
-    def __init__(self, bot_token, chat_id, json_keyfile_name, spreadsheet_id):
+    def __init__(self, bot_token, chat_id_alert, json_keyfile_name, spreadsheet_id, chat_id_otchet):
         self.bot = telebot.TeleBot(bot_token)
-        self.chat_id = chat_id
+        self.chat_id_alert = chat_id_alert
         self.google_sheets_client = GoogleSheetsClient(json_keyfile_name, spreadsheet_id)
+        self.chat_id_otchet = chat_id_otchet
 
-    def send_message(self, text):
+    def send_message_alert(self, text):
         try:
-            self.bot.send_message(self.chat_id, text)
+            self.bot.send_message(self.chat_id_alert, text)
+        except Exception as e:
+            print(f"Не удалось отправить сообщение: {e}")
+
+    def send_message_otchet(self, text):
+        try:
+            self.bot.send_message(self.chat_id_otchet, text)
         except Exception as e:
             print(f"Не удалось отправить сообщение: {e}")
 
@@ -19,7 +26,7 @@ class TelegramAlertBot:
             worksheet = self.google_sheets_client.get_worksheet_by_name(sheet_name)
             data = worksheet.get_all_values()
         except Exception as e:
-            self.send_message(f"Ошибка при получении данных из Google Sheets: {e}")
+            self.send_message_alert(f"Ошибка при получении данных из Google Sheets: {e}")
             return []
 
         # Список для хранения всех строк, соответствующих заданной дате
@@ -52,14 +59,14 @@ class TelegramAlertBot:
         rows = self.get_data_from_google_sheets(sheet_name, date_str)
 
         if not rows:
-            self.send_message(f"Нет данных для отчета на {date_str}")
+            self.send_message_alert(f"Нет данных для отчета на {date_str}")
             return
 
         # Обработка всех строк, соответствующих заданной дате
         for data in rows:
             # Проверка, что данные содержат нужное количество столбцов
             if len(data) < 21:  # Убедитесь, что есть как минимум 21 элемент
-                self.send_message(f"Ошибка: Недостаточно данных для отчета на {date_str}")
+                self.send_message_alert(f"Ошибка: Недостаточно данных для отчета на {date_str}")
                 continue
 
             # Формирование сообщения, используя индексы столбцов
@@ -79,4 +86,4 @@ class TelegramAlertBot:
             )
 
             # Отправка сообщения через Telegram бот
-            self.send_message(message)
+            self.send_message_otchet(message)
