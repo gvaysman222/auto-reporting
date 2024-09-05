@@ -26,7 +26,6 @@ CONFIG = {
     'chat_id_otchet': "-1001625050526"
 }
 
-
 # Функции обработки файлов
 def process_file_shved(file_path, alert_bot):
     try:
@@ -69,7 +68,7 @@ def handle_processing_error(file_path, exception, alert_bot):
 
 def main():
     # Создание экземпляра Telegram бота для отправки алертов
-    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['chat_id_alert'], CONFIG['sheets_credentials_path'], "1T_xOCiDFiE8BWDsK_Iodo79fu2aLV_DqgZQrtbpwhU4", CONFIG['chat_id_otchet'])
+    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['chat_id_alert'], CONFIG['sheets_credentials_path'], "1BSNaGIitUz3E2QoO944TO4YJxj4QO7BwGsURAaPhdok", CONFIG['chat_id_otchet'])
 
     # Создание экземпляра класса для загрузки файлов
     downloader = GmailAttachmentDownloader(
@@ -103,6 +102,6 @@ def main():
                 logging.warning(f"Файл {file_name} не удалось обработать, он пропущен.")
 
     TelegramAlertBot.generate_and_send_report(alert_bot)
-
+    TelegramAlertBot.generate_and_send_report_1c(alert_bot)
 if __name__ == '__main__':
     main()
