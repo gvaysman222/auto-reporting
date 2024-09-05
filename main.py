@@ -68,7 +68,7 @@ def handle_processing_error(file_path, exception, alert_bot):
 
 def main():
     # Создание экземпляра Telegram бота для отправки алертов
-    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['chat_id_alert'], CONFIG['sheets_credentials_path'], "1BSNaGIitUz3E2QoO944TO4YJxj4QO7BwGsURAaPhdok", CONFIG['chat_id_otchet'])
+    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['chat_id_alert'], CONFIG['sheets_credentials_path'], "1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0", CONFIG['chat_id_otchet'])
 
     # Создание экземпляра класса для загрузки файлов
     downloader = GmailAttachmentDownloader(
