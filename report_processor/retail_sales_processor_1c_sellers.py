@@ -1,12 +1,16 @@
 import pandas as pd
 import re
 
-
 class RetailSalesProcessor1CSellers:
     def __init__(self, google_sheets_client, worksheet_index):
         self.google_sheets_client = google_sheets_client
         self.worksheet_index = worksheet_index
         self.worksheet = self.google_sheets_client.get_worksheet(self.worksheet_index)
+
+    @staticmethod
+    def extract_store_name(file_name):
+        match = re.search(r'(LACRO|Guess)', file_name, re.IGNORECASE)
+        return match.group(0) if match else "Unknown"
 
     def read_and_filter_excel_data(self, excel_file_path):
         df = pd.read_excel(excel_file_path)
@@ -19,8 +23,7 @@ class RetailSalesProcessor1CSellers:
 
         return df, sellers, dates
 
-    def process_data(self, df, sellers, dates):
-
+    def process_data(self, df, sellers, dates, store_name):
         df = df[~df['Продавец'].str.strip().str.lower().isin(["итого"])]
 
         quantity_values = []
@@ -66,13 +69,18 @@ class RetailSalesProcessor1CSellers:
             'Количество чеков': check_values,
             'Средний чек': average_check_values,
             'UPT': upt_values,
+            'Магазин': [store_name] * len(sellers),
         })
 
         return df_result.fillna('')
 
     def process_and_update(self, excel_file_path):
+        # Извлечение имени магазина из имени файла
+        file_name = excel_file_path.split('/')[-1]
+        store_name = self.extract_store_name(file_name)
+
         df, sellers, dates = self.read_and_filter_excel_data(excel_file_path)
-        df_result = self.process_data(df, sellers, dates)
+        df_result = self.process_data(df, sellers, dates, store_name)
         self.google_sheets_client.update_google_sheet(self.worksheet, df_result)
 
     @staticmethod

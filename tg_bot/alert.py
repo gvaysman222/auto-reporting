@@ -71,6 +71,7 @@ class TelegramAlertBot:
 
             # Формирование сообщения, используя индексы столбцов
             message = (
+                "✅Отчет✅\n\n"
                 f"Дата: {day_of_week} {yesterday.strftime('%d.%m.%Y')}\n\n"
                 f"{data[0]} {data[17]}\n\n"  # ID и Магазин&Город (например, это столбцы A и R)
                 f"История: {data[9]} \n"  # Выручка история
@@ -122,6 +123,7 @@ class TelegramAlertBot:
 
             # Формирование сообщения, используя индексы столбцов
             message = (
+                "✅Отчет✅\n\n"
                 f"Дата: {day_of_week} {yesterday.strftime('%d.%m.%Y')}\n\n"
                 f"{data[0]} {data[17]}\n\n"  # ID и Магазин&Город (например, это столбцы A и R)
                 f"История: {data[9]} \n"  # Выручка история

@@ -60,7 +60,7 @@ def process_file_1c(file_path, alert_bot):
 
 def handle_processing_error(file_path, exception, alert_bot):
     file_name = os.path.basename(file_path)
-    alert_message = f"Ошибка при обработке файла '{file_name}': {exception}"
+    alert_message = f"❌Ошибка при обработке файла '{file_name}': {exception}"
     time.sleep(1)
     alert_bot.send_message_alert(alert_message)
     logging.error(alert_message)
