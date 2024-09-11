@@ -18,17 +18,15 @@ CONFIG = {
     'download_dir': 'downloads',
     'processed_files_path': 'loader_reporting/processed_files.json',
     'sheets_credentials_path': 'loader_reporting/credentials/mailapi-431104-8992c2888d0e.json',
-    'spreadsheet_id_1': '1kX591Zj4ZxdH4HI-G8eV7FM-YqsNMrzVJJiP9s4Ekro',
+    'spreadsheet_id_1': '1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0',
     'worksheet_name_1': 'ИСТОРИЯ МАГАЗИНОВ',
     'worksheet_name_2': 'ИСТОРИЯ ПО ПК',
-    'bot_token': "5998611067:AAGAorkOfr0PRAn-vZWyUiKxWQ11MhsUUj8",
-    'chat_id_alert': "-1002030942634",
-    'chat_id_otchet': "-1002030942634",
+    'bot_token': "6557974713:AAEE0YRnoHprSnV0HXvAgpJz2ndP_d1Pipg",
+    'chat_id_alert': "-1001819696460",
+    'chat_id_otchet': "-1001625050526",
     'report_log_file': 'log.txt'
 }
-# 'bot_token': "6557974713:AAEE0YRnoHprSnV0HXvAgpJz2ndP_d1Pipg",
-#     'chat_id_alert': "-1001819696460",
-#     'chat_id_otchet': "-1001625050526"
+
 # Функции обработки файлов
 def process_file_shved(file_path, alert_bot):
     try:
@@ -75,7 +73,7 @@ def main():
         CONFIG['bot_token'],
         CONFIG['chat_id_alert'],
         CONFIG['sheets_credentials_path'],
-        "1kX591Zj4ZxdH4HI-G8eV7FM-YqsNMrzVJJiP9s4Ekro",
+        "1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0",
         CONFIG['chat_id_otchet'],)
 
     # Создание экземпляра класса для загрузки файлов
