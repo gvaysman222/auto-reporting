@@ -1,6 +1,6 @@
 import pandas as pd
 import re
-
+from gspread_dataframe import set_with_dataframe
 
 class RetailSalesProcessorShop:
     def __init__(self, google_sheets_client, worksheet_index):
@@ -89,9 +89,12 @@ class RetailSalesProcessorShop:
         average_check = self.extract_average_check(df)
         upt_value = self.extract_upt(df)
 
+        # Преобразуем дату в объект datetime, а не в строку
+        report_date = pd.to_datetime(report_date, dayfirst=True)
+
         df_result = pd.DataFrame({
             'Магазин': [store_name],
-            'Дата': [report_date],
+            'Дата': [report_date],  # Передаем дату как объект datetime
             'Итоговая выручка': [total_revenue],
             'Количество товаров': [total_quantity],
             'Количество чеков': [total_checks],
@@ -99,4 +102,5 @@ class RetailSalesProcessorShop:
             'UPT': [upt_value]
         })
 
-        self.google_sheets_client.update_google_sheet(self.worksheet, df_result)
+        # Используем gspread_dataframe для загрузки DataFrame в Google Sheets
+        set_with_dataframe(self.worksheet, df_result)
