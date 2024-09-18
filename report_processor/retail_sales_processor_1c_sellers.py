@@ -9,7 +9,7 @@ class RetailSalesProcessor1CSellers:
 
     @staticmethod
     def extract_store_name(file_name):
-        match = re.search(r'(LACRO|Guess)', file_name, re.IGNORECASE)
+        match = re.search(r'(LaCrO|Guess)', file_name, re.IGNORECASE)
         return match.group(0) if match else "Unknown"
 
     def read_and_filter_excel_data(self, excel_file_path):

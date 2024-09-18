@@ -6,7 +6,13 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
-
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver.common.action_chains import ActionChains
 
 class GmailAttachmentDownloader:
     def __init__(self, credentials_path, token_path, download_dir, processed_files_path, scopes=None):
@@ -23,6 +29,71 @@ class GmailAttachmentDownloader:
 
         self.authenticate_gmail()
 
+    def open_browser(self, auth_url):
+        """Открывает браузер через Selenium и автоматически вводит логин и пароль"""
+        chrome_options = ChromeOptions()
+        chrome_options.add_argument("--start-maximized")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--disable-infobars")
+        chrome_options.add_argument("--disable-popup-blocking")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
+
+        driver = webdriver.Chrome(options=chrome_options)
+
+        # Открываем URL для авторизации
+        driver.get(auth_url)
+
+        # Вводим логин и пароль через Selenium
+        time.sleep(5)
+        email_input = driver.find_element(By.ID, "identifierId")
+        email_input.send_keys("analyticsuu@gmail.com")
+        driver.find_element(By.ID, "identifierNext").click()
+
+        time.sleep(5)
+        password_input = driver.find_element(By.NAME, "Passwd")
+        password_input.send_keys("UUTim_24")
+        driver.find_element(By.ID, "passwordNext").click()
+
+        wait = WebDriverWait(driver, 3)
+        continue_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Продолжить']")))
+        actions = ActionChains(driver)
+        actions.move_to_element(continue_button).click().perform()
+
+        try:
+            wait = WebDriverWait(driver, 5)
+            continue_button_2 = wait.until(
+                EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Продолжить']]")))
+
+            driver.execute_script("arguments[0].scrollIntoView(true);", continue_button_2)
+            time.sleep(1)
+            driver.execute_script("arguments[0].click();", continue_button_2)
+            print("Успешно кликнули на вторую кнопку 'Продолжить' с помощью JavaScript.")
+
+        except StaleElementReferenceException:
+            print("Элемент был изменен, повторяем попытку поиска...")
+            continue_button_2 = wait.until(
+                EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Продолжить']]")))
+            driver.execute_script("arguments[0].click();", continue_button_2)
+
+        except Exception as e:
+            print(f"Не удалось нажать на вторую кнопку 'Продолжить': {e}")
+
+        # Ожидаем появления кода авторизации в URL
+        while "code=" not in driver.current_url:
+            time.sleep(1)
+
+        # Получаем код авторизации из URL
+        auth_code = driver.current_url.split("code=")[1]
+
+        # Закрываем браузер
+        driver.quit()
+
+        return auth_code
+
     def authenticate_gmail(self):
         if os.path.exists(self.token_path):
             self.creds = Credentials.from_authorized_user_file(self.token_path, self.scopes)
@@ -31,9 +102,21 @@ class GmailAttachmentDownloader:
             if self.creds and self.creds.expired and self.creds.refresh_token:
                 self.creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(self.credentials_path, self.scopes)
-                self.creds = flow.run_local_server(port=0)
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    self.credentials_path,
+                    self.scopes,
+                    redirect_uri='http://localhost:8000/oauth2callback'  # Указываем redirect_uri
+                )
+                auth_url, _ = flow.authorization_url(prompt='consent')
 
+                # Открываем браузер для автоматизации через Selenium
+                auth_code = self.open_browser(auth_url)
+
+                # Получаем токен используя код авторизации
+                flow.fetch_token(code=auth_code)
+                self.creds = flow.credentials  # Получаем credentials объект
+
+            # Сохраняем токен в файл
             with open(self.token_path, 'w') as token_file:
                 token_file.write(self.creds.to_json())
 

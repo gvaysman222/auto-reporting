@@ -23,8 +23,7 @@ CONFIG = {
     'worksheet_name_2': 'ИСТОРИЯ ПО ПК',
     'bot_token': "6557974713:AAEE0YRnoHprSnV0HXvAgpJz2ndP_d1Pipg",
     'chat_id_alert': "-1001819696460",
-    'chat_id_otchet': "-1001625050526",
-    'report_log_file': 'log.txt'
+    'chat_id_otchet': "-1001625050526"
 }
 
 # Функции обработки файлов
@@ -69,12 +68,7 @@ def handle_processing_error(file_path, exception, alert_bot):
 
 def main():
     # Создание экземпляра Telegram бота для отправки алертов
-    alert_bot = TelegramAlertBot(
-        CONFIG['bot_token'],
-        CONFIG['chat_id_alert'],
-        CONFIG['sheets_credentials_path'],
-        "1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0",
-        CONFIG['chat_id_otchet'],)
+    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['chat_id_alert'], CONFIG['sheets_credentials_path'], "1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0", CONFIG['chat_id_otchet'])
 
     # Создание экземпляра класса для загрузки файлов
     downloader = GmailAttachmentDownloader(
