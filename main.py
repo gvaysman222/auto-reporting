@@ -26,7 +26,7 @@ CONFIG = {
 class TelegramLoggingHandler(logging.Handler):
     def __init__(self, bot_token, chat_id):
         super().__init__()
-        self.bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['user_chat_id'], CONFIG['sheets_credentials_path'], "1kX591Zj4ZxdH4HI-G8eV7FM-YqsNMrzVJJiP9s4Ekro", CONFIG['chat_id_otchet'])
+        self.bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['user_chat_id'], CONFIG['sheets_credentials_path'], "1QToarQOLu0PyyuLSr_XeUY5Qb0M0QUhiTgdujDpAUHM", CONFIG['chat_id_otchet'])
 
     def emit(self, record):
         log_entry = self.format(record)
