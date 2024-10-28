@@ -71,17 +71,35 @@ class RevenueProcessor:
         self.worksheet = spreadsheet.worksheet(self.worksheet_name)
 
     def upload_to_google_sheets(self):
-        col_a_values = self.worksheet.col_values(1)
+        # Аутентификация с помощью сервисного аккаунта
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        creds = ServiceAccountCredentials.from_json_keyfile_name(self.credentials_path, scope)
+        client = gspread.authorize(creds)
 
-        # Определение первой пустой строки в столбце A
-        first_empty_row = len(col_a_values) + 1
-        for idx, value in enumerate(col_a_values, start=1):
-            if not value.strip():  # Проверяем, что значение пустое или состоит из пробелов
-                first_empty_row = idx
-                break
+        # Открытие таблицы и нужного листа
+        spreadsheet = client.open_by_key(self.spreadsheet_id)
+        worksheet = spreadsheet.worksheet(self.worksheet_name)
 
-        # Загрузка DataFrame в Google Таблицу без заголовков, начиная с первой пустой строки в столбце A
-        set_with_dataframe(self.worksheet, self.result_df, row=first_empty_row, include_column_header=False)
+        # Получение всех значений с таблицы
+        existing_data = worksheet.get_all_records()
+
+        # Преобразование в DataFrame
+        df_existing = pd.DataFrame(existing_data)
+
+        # Проверка на наличие строки с таким же ID магазина и датой
+        mask = (df_existing['ID'] == self.store_id) & (df_existing['Дата'] == self.date)
+
+        if not df_existing[mask].empty:
+            # Если запись существует, обновляем её
+            row_index = df_existing[mask].index[0] + 2  # Индекс строки в Google Sheets (учитываем заголовки)
+            set_with_dataframe(worksheet, self.result_df, row=row_index, include_column_header=False)
+            print(f"Запись для ID магазина '{self.store_id}' и даты '{self.date}' обновлена.")
+        else:
+            # Если запись не найдена, добавляем новую строку
+            col_a_values = worksheet.col_values(1)
+            first_empty_row = len(col_a_values) + 1
+            set_with_dataframe(worksheet, self.result_df, row=first_empty_row, include_column_header=False)
+            print(f"Добавлена новая запись для ID магазина '{self.store_id}' и даты '{self.date}'.")
 
     def process(self):
         self.load_initial_data()

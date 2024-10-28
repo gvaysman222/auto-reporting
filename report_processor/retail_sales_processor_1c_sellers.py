@@ -1,5 +1,7 @@
 import pandas as pd
 import re
+from gspread_dataframe import set_with_dataframe
+from datetime import datetime
 
 class RetailSalesProcessor1CSellers:
     def __init__(self, google_sheets_client, worksheet_index):
@@ -25,6 +27,9 @@ class RetailSalesProcessor1CSellers:
 
     def process_data(self, df, sellers, dates, store_name):
         df = df[~df['Продавец'].str.strip().str.lower().isin(["итого"])]
+
+        # Преобразуем даты в объект datetime без преобразования обратно в строку
+        dates = pd.to_datetime(dates, dayfirst=True).strftime('%d.%m.%Y')
 
         quantity_values = []
         check_values = []
@@ -74,6 +79,12 @@ class RetailSalesProcessor1CSellers:
 
         return df_result.fillna('')
 
+    def find_last_empty_row(self):
+        # Получаем все значения в колонке А
+        column_a_values = self.worksheet.col_values(1)
+        # Найти индекс первой пустой строки
+        return len(column_a_values) + 1
+
     def process_and_update(self, excel_file_path):
         # Извлечение имени магазина из имени файла
         file_name = excel_file_path.split('/')[-1]
@@ -81,7 +92,12 @@ class RetailSalesProcessor1CSellers:
 
         df, sellers, dates = self.read_and_filter_excel_data(excel_file_path)
         df_result = self.process_data(df, sellers, dates, store_name)
-        self.google_sheets_client.update_google_sheet(self.worksheet, df_result)
+
+        # Найдем последнюю пустую строку в Google Sheets
+        last_row = self.find_last_empty_row()
+
+        # Используем gspread_dataframe для загрузки DataFrame в Google Sheets в последнюю пустую строку
+        set_with_dataframe(self.worksheet, df_result, row=last_row, include_index=False, include_column_header=False)
 
     @staticmethod
     def is_seller_name(value):

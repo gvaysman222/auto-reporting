@@ -8,10 +8,6 @@ from loader_reporting.loader import GmailAttachmentDownloader
 from report_processor.ne_1c import RevenueProcessor, SalesReportProcessor
 from tg_bot.alert import TelegramAlertBot
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# Конфигурация приложения
 CONFIG = {
     'credentials_path': 'loader_reporting/credentials/credentials.json',
     'token_path': 'loader_reporting/credentials/token.json',
@@ -22,9 +18,48 @@ CONFIG = {
     'worksheet_name_1': 'ИСТОРИЯ МАГАЗИНОВ',
     'worksheet_name_2': 'ИСТОРИЯ ПО ПК',
     'bot_token': "6557974713:AAEE0YRnoHprSnV0HXvAgpJz2ndP_d1Pipg",
-    'chat_id_alert': "-1001819696460",
-    'chat_id_otchet': "-1001625050526"
+    'user_chat_id': '690471273',  # Личный chat_id пользователя, куда будут отправляться сообщения
+    'chat_id_otchet': "-1001625050526"  # Чат для отчетов
 }
+
+# Кастомный обработчик логов для отправки сообщений через Telegram в личные сообщения
+class TelegramLoggingHandler(logging.Handler):
+    def __init__(self, bot_token, chat_id):
+        super().__init__()
+        self.bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['user_chat_id'], CONFIG['sheets_credentials_path'], "1kX591Zj4ZxdH4HI-G8eV7FM-YqsNMrzVJJiP9s4Ekro", CONFIG['chat_id_otchet'])
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        self.bot.send_message_alert(log_entry)
+
+# Конфигурация приложения
+
+# 'credentials_path': 'loader_reporting/credentials/credentials.json',
+# 'token_path': 'loader_reporting/credentials/token.json',
+# 'download_dir': 'downloads',
+# 'processed_files_path': 'loader_reporting/processed_files.json',
+# 'sheets_credentials_path': 'loader_reporting/credentials/mailapi-431104-8992c2888d0e.json',
+# 'spreadsheet_id_1': '1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0',
+# 'worksheet_name_1': 'ИСТОРИЯ МАГАЗИНОВ',
+# 'worksheet_name_2': 'ИСТОРИЯ ПО ПК',
+# 'bot_token': "6557974713:AAEE0YRnoHprSnV0HXvAgpJz2ndP_d1Pipg",
+# 'user_chat_id': '123456789',  # Личный chat_id пользователя, куда будут отправляться сообщения
+# 'chat_id_otchet': "-1001625050526"  # Чат для отчетов
+
+# Настройка логирования
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# Добавляем кастомный обработчик для отправки логов через Telegram в личные сообщения
+telegram_handler = TelegramLoggingHandler(CONFIG['bot_token'], CONFIG['user_chat_id'])
+telegram_handler.setLevel(logging.INFO)
+
+# Форматирование логов
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+telegram_handler.setFormatter(formatter)
+
+# Добавляем обработчик в логгер
+logger.addHandler(telegram_handler)
 
 # Функции обработки файлов
 def process_file_shved(file_path, alert_bot):
@@ -42,7 +77,6 @@ def process_file_shved(file_path, alert_bot):
         handle_processing_error(file_path, e, alert_bot)
         return False
 
-
 def process_file_1c(file_path, alert_bot):
     sheets_client = GoogleSheetsClient(CONFIG['sheets_credentials_path'], CONFIG['spreadsheet_id_1'])
     try:
@@ -57,7 +91,6 @@ def process_file_1c(file_path, alert_bot):
         handle_processing_error(file_path, e, alert_bot)
         return False
 
-
 def handle_processing_error(file_path, exception, alert_bot):
     file_name = os.path.basename(file_path)
     alert_message = f"❌Ошибка при обработке файла '{file_name}': {exception}"
@@ -65,10 +98,9 @@ def handle_processing_error(file_path, exception, alert_bot):
     alert_bot.send_message_alert(alert_message)
     logging.error(alert_message)
 
-
 def main():
     # Создание экземпляра Telegram бота для отправки алертов
-    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['chat_id_alert'], CONFIG['sheets_credentials_path'], "1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0", CONFIG['chat_id_otchet'])
+    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['user_chat_id'], CONFIG['sheets_credentials_path'], "1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0", CONFIG['chat_id_otchet'])
 
     # Создание экземпляра класса для загрузки файлов
     downloader = GmailAttachmentDownloader(
@@ -103,5 +135,6 @@ def main():
 
     TelegramAlertBot.generate_and_send_report(alert_bot)
     TelegramAlertBot.generate_and_send_report_1c(alert_bot)
+
 if __name__ == '__main__':
     main()

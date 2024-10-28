@@ -1,6 +1,7 @@
 import pandas as pd
 import re
-
+from gspread_dataframe import set_with_dataframe
+from datetime import datetime
 
 class RetailSalesProcessorShop:
     def __init__(self, google_sheets_client, worksheet_index):
@@ -76,6 +77,12 @@ class RetailSalesProcessorShop:
         else:
             return 0
 
+    def find_last_empty_row(self):
+        # Получаем все значения в колонке А
+        column_a_values = self.worksheet.col_values(1)
+        # Найти индекс первой пустой строки
+        return len(column_a_values) + 1
+
     def process_and_update(self, excel_file_path):
         file_name = excel_file_path.split('/')[-1]
         store_name = self.extract_store_name(file_name)
@@ -89,6 +96,9 @@ class RetailSalesProcessorShop:
         average_check = self.extract_average_check(df)
         upt_value = self.extract_upt(df)
 
+        # Преобразуем дату в формат дд.мм.гггг
+        report_date = pd.to_datetime(report_date, dayfirst=True).strftime('%d.%m.%Y')
+
         df_result = pd.DataFrame({
             'Магазин': [store_name],
             'Дата': [report_date],
@@ -99,4 +109,8 @@ class RetailSalesProcessorShop:
             'UPT': [upt_value]
         })
 
-        self.google_sheets_client.update_google_sheet(self.worksheet, df_result)
+        # Найдем последнюю пустую строку
+        last_row = self.find_last_empty_row()
+
+        # Используем gspread_dataframe для загрузки DataFrame в Google Sheets в последнюю пустую строку
+        set_with_dataframe(self.worksheet, df_result, row=last_row, include_index=False, include_column_header=False)

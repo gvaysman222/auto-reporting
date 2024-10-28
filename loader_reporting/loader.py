@@ -58,6 +58,8 @@ class GmailAttachmentDownloader:
         password_input.send_keys("UUTim_24")
         driver.find_element(By.ID, "passwordNext").click()
 
+
+
         wait = WebDriverWait(driver, 3)
         continue_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Продолжить']")))
         actions = ActionChains(driver)
