@@ -14,12 +14,12 @@ CONFIG = {
     'download_dir': 'downloads',
     'processed_files_path': 'loader_reporting/processed_files.json',
     'sheets_credentials_path': 'loader_reporting/credentials/mailapi-431104-8992c2888d0e.json',
-    'spreadsheet_id_1': '1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0',
+    'spreadsheet_id_1': '1QToarQOLu0PyyuLSr_XeUY5Qb0M0QUhiTgdujDpAUHM',
     'worksheet_name_1': 'ИСТОРИЯ МАГАЗИНОВ',
     'worksheet_name_2': 'ИСТОРИЯ ПО ПК',
     'bot_token': "6557974713:AAEE0YRnoHprSnV0HXvAgpJz2ndP_d1Pipg",
     'user_chat_id': '690471273',  # Личный chat_id пользователя, куда будут отправляться сообщения
-    'chat_id_otchet': "-1001625050526"  # Чат для отчетов
+    'chat_id_otchet': "-1002030942634"  # Чат для отчетов
 }
 
 # Кастомный обработчик логов для отправки сообщений через Telegram в личные сообщения
@@ -100,7 +100,7 @@ def handle_processing_error(file_path, exception, alert_bot):
 
 def main():
     # Создание экземпляра Telegram бота для отправки алертов
-    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['user_chat_id'], CONFIG['sheets_credentials_path'], "1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0", CONFIG['chat_id_otchet'])
+    alert_bot = TelegramAlertBot(CONFIG['bot_token'], CONFIG['user_chat_id'], CONFIG['sheets_credentials_path'], "1QToarQOLu0PyyuLSr_XeUY5Qb0M0QUhiTgdujDpAUHM", CONFIG['chat_id_otchet'])
 
     # Создание экземпляра класса для загрузки файлов
     downloader = GmailAttachmentDownloader(
