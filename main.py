@@ -14,12 +14,12 @@ CONFIG = {
     'download_dir': 'downloads',
     'processed_files_path': 'loader_reporting/processed_files.json',
     'sheets_credentials_path': 'loader_reporting/credentials/mailapi-431104-8992c2888d0e.json',
-    'spreadsheet_id_1': '1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0',
+    'spreadsheet_id_1': '',
     'worksheet_name_1': 'ИСТОРИЯ МАГАЗИНОВ',
     'worksheet_name_2': 'ИСТОРИЯ ПО ПК',
-    'bot_token': "6557974713:AAEE0YRnoHprSnV0HXvAgpJz2ndP_d1Pipg",
-    'user_chat_id': '690471273',  # Личный chat_id пользователя, куда будут отправляться сообщения
-    'chat_id_otchet': "-1002030942634"  # Чат для отчетов
+    'bot_token': "",
+    'user_chat_id': '',  # Личный chat_id пользователя, куда будут отправляться сообщения
+    'chat_id_otchet': ""  # Чат для отчетов
 }
 
 # Кастомный обработчик логов для отправки сообщений через Telegram в личные сообщения
@@ -31,20 +31,6 @@ class TelegramLoggingHandler(logging.Handler):
     def emit(self, record):
         log_entry = self.format(record)
         self.bot.send_message_alert(log_entry)
-
-# Конфигурация приложения
-
-# 'credentials_path': 'loader_reporting/credentials/credentials.json',
-# 'token_path': 'loader_reporting/credentials/token.json',
-# 'download_dir': 'downloads',
-# 'processed_files_path': 'loader_reporting/processed_files.json',
-# 'sheets_credentials_path': 'loader_reporting/credentials/mailapi-431104-8992c2888d0e.json',
-# 'spreadsheet_id_1': '1qqDlGHYDUy8Uv8Yf89S0aKnUngOOLVuERNBmfrHA3a0',
-# 'worksheet_name_1': 'ИСТОРИЯ МАГАЗИНОВ',
-# 'worksheet_name_2': 'ИСТОРИЯ ПО ПК',
-# 'bot_token': "6557974713:AAEE0YRnoHprSnV0HXvAgpJz2ndP_d1Pipg",
-# 'user_chat_id': '123456789',  # Личный chat_id пользователя, куда будут отправляться сообщения
-# 'chat_id_otchet': "-1001625050526"  # Чат для отчетов
 
 # Настройка логирования
 logger = logging.getLogger()
